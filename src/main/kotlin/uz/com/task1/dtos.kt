@@ -1,5 +1,7 @@
 package uz.com.task1
 
+import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 
@@ -23,7 +25,6 @@ data class UserCreateRequest(
 data class UserUpdateRequest(
         var fullName: String,
         var username: String?,
-        var balance: BigDecimal,
         var userRole: UserRole
 )
 
@@ -124,7 +125,7 @@ data class CategoryResponse(
 
 data class TransactionCreateRequest(
         var userId: Long,
-        var totalAmount: BigDecimal
+        var totalAmount: BigDecimal= BigDecimal.ZERO
 ){
     fun toEntity(user: User):Transaction{
         return Transaction(user,totalAmount)
@@ -140,6 +141,72 @@ data class TransactionResponse(
         fun toResponse(transaction: Transaction):TransactionResponse{
             transaction.run {
                 return TransactionResponse(id!!, userId.username,totalAmount)
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+data class UserPaymentTransactionCreateRequest(
+        var userId: Long,
+        var amount: BigDecimal
+){
+    fun toEntity(user: User):UserPaymentTransaction{
+        return UserPaymentTransaction(user,amount)
+    }
+}
+
+data class UserPaymentTransactionResponse(
+        var  id: Long,
+        var userUsername: String,
+        var amount: BigDecimal
+){
+    companion object{
+        fun toResponse(userPaymentTransaction: UserPaymentTransaction):UserPaymentTransactionResponse{
+            userPaymentTransaction.run {
+                return UserPaymentTransactionResponse(id!!,userId.username,amount)
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+data class TransactionItemCreateRequest(
+        var productId:Long,
+        @field:Min(1) @field:Positive var count: Long,
+        var amount: BigDecimal,
+        var transactionId:Long
+){
+    fun toEntity(transaction: Transaction, product: Product):TransactionItem{
+        val totalAmount = amount.multiply(BigDecimal(count))
+        return TransactionItem(product,count,amount,totalAmount,transaction)
+    }
+}
+
+data class TransactionItemResponse(
+        var id: Long,
+        var count: Long,
+        var amount: BigDecimal,
+        var transactionId: Long
+){
+    companion object{
+        fun toResponse(transactionItem: TransactionItem):TransactionItemResponse{
+            transactionItem.run {
+                return TransactionItemResponse(id!!,count,amount, transactionId.id!!)
             }
         }
     }

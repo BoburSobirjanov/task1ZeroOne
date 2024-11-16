@@ -9,7 +9,7 @@ sealed class DemoExceptionHandler : RuntimeException() {
 
     fun getErrorMessage(resourceBundle: ResourceBundleMessageSource): BaseMessage {
         val message = try {
-            resourceBundle.getMessage(  // USER_NOT_FOUND
+            resourceBundle.getMessage(
                     errorCode().name, getAllArguments(), LocaleContextHolder.getLocale()
             )
         } catch (e: Exception) {
@@ -39,4 +39,20 @@ class CategoryNotFoundExistsException:DemoExceptionHandler(){
 
 class ProductNotFoundException:DemoExceptionHandler(){
     override fun errorCode()= ErrorCodes.PRODUCT_NOT_FOUND
+}
+
+class UserPaymentTransactionNotFoundException:DemoExceptionHandler(){
+    override fun errorCode()= ErrorCodes.USER_PAYMENT_TRANSACTION_NOT_FOUND
+}
+
+class TransactionNotFoundException:DemoExceptionHandler(){
+    override fun errorCode()= ErrorCodes.TRANSACTION_NOT_FOUND_EXCEPTION
+}
+
+class ProductHasNotEnoughException:DemoExceptionHandler(){
+    override fun errorCode()= ErrorCodes.PRODUCT_HAS_NOT_ENOUGH_EXCEPTION
+}
+
+class UserHasNotEnoughBalance:DemoExceptionHandler(){
+    override fun errorCode()= ErrorCodes.USER_HAS_NOT_ENOUGH_BALANCE
 }
