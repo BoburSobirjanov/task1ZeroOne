@@ -1,5 +1,7 @@
 package uz.com.task1
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
@@ -60,4 +62,42 @@ interface CategoryRepository:BaseRepository<Category> {
     @Query("select u from category as u where u.id=:id and u.name=:name and u.deleted=false")
     fun findCategoryByIdAndName(id: Long, name: String):Category?
 
+}
+
+
+
+@Repository
+interface TransactionRepository:BaseRepository<Transaction>{
+
+    @Query("select u from transactions as u where u.deleted=false and u.id=:id")
+    fun findTransactionById(id: Long)
+
+
+    @Query("select u from transactions as u where u.deleted=false and u.userId=:user")
+    fun findTransactionByUserId(user: User)
+}
+
+
+
+
+
+
+@Repository
+interface UserPaymentTransactionRepository:BaseRepository<UserPaymentTransaction>{
+
+    @Query("select u from user_payment_transaction as u where u.id=:id")
+    fun findUserPaymentTransactionById(id: Long):UserPaymentTransaction?
+
+    @Query("select u from user_payment_transaction as u where u.deleted=false and u.userId=:user")
+    fun findAllUserPaymentTransactionByUserId(user: User, pageable: Pageable):Page<UserPaymentTransaction>
+
+}
+
+
+
+
+@Repository
+interface TransactionItemsRepository:BaseRepository<TransactionItem>{
+    @Query("select u from transaction_items as u where u.deleted=false and u.id=:id")
+    fun findTransactionItemById(id: Long)
 }

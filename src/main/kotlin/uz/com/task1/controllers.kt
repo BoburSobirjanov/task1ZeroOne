@@ -1,14 +1,12 @@
 package uz.com.task1
 
 import jakarta.validation.Valid
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.context.support.ResourceBundleMessageSource
+import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.ExceptionHandler
+
 
 @RestController
 @RequestMapping("api/v1/user")
@@ -85,4 +83,45 @@ class ProductController(val productService: ProductService){
 
     @DeleteMapping("{id}")
     fun delete(@PathVariable id: Long)=productService.delete(id)
+}
+
+
+
+
+
+
+
+@RestController
+@RequestMapping("api/v1/user-payment-transaction")
+class UserPaymentTransactionController(val userPaymentTransactionService: UserPaymentTransactionService){
+
+    @PostMapping("create")
+    fun create(@RequestBody request: UserPaymentTransactionCreateRequest)=userPaymentTransactionService.create(request)
+
+    @GetMapping("get-users-payments-history")
+    fun getUsersAllPaymentTransaction(@RequestParam id: Long, pageable: Pageable)=userPaymentTransactionService.getUsersPaymentTransactionHistory(id, pageable)
+
+}
+
+
+
+
+@RestController
+@RequestMapping("api/v1/transaction")
+class TransactionController(val transactionService: TransactionService ){
+
+    @PostMapping("create")
+    fun create(@RequestBody request: TransactionCreateRequest)=transactionService.create(request)
+}
+
+
+
+
+
+@RestController
+@RequestMapping("api/v1/transaction-item")
+class TransactionItemController(val transactionItemService: TransactionItemService){
+
+    @PostMapping("create")
+    fun create(@RequestBody request: TransactionItemCreateRequest)=transactionItemService.create(request)
 }
