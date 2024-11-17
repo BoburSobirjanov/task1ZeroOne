@@ -1,8 +1,10 @@
 package uz.com.task1
 
 import jakarta.validation.Valid
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 
 @RestController
@@ -60,7 +62,15 @@ class CategoryController(val categoryService: CategoryService
     fun delete(@PathVariable id: Long)= categoryService.delete(id)
 
     @GetMapping("get-all")
-    fun getAll(pageable: Pageable)=categoryService.getAll(pageable)
+    fun getAll(@RequestParam(required = false) sortState: String?,pageable: Pageable): Page<CategoryResponse> {
+        return if (sortState.isNullOrBlank()) {
+            categoryService.getAll(pageable)
+        } else {
+            if (sortState.toLowerCase() != "asc" && sortState.toLowerCase() != "desc") {
+                throw IllegalArgumentException("sortState must be 'asc' or 'desc'")
+            }
+            categoryService.getSortedAll(sortState,pageable)
+        }
 }
 
 
@@ -170,4 +180,5 @@ class TransactionItemController(val transactionItemService: TransactionItemServi
     @GetMapping
     fun usersTransactionItemsHistory(@RequestParam id: Long, pageable: Pageable)=
             transactionItemService.getUsersTransactionItemsHistory(id, pageable)
+  }
 }
