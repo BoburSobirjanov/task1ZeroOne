@@ -87,7 +87,7 @@ data class ProductResponse(
 data class CategoryCreateRequest(
         var name: String,
         var orders: Long,
-        var description: String
+        var description: String,
 ){
     fun toEntity():Category{
         return Category(name, orders, description)
@@ -98,7 +98,7 @@ data class CategoryResponse(
         var id: Long,
         var name: String,
         var description: String,
-        var order: Long=0L
+        var order: Long
 ){
     companion object {
         fun toResponse(category: Category): CategoryResponse {

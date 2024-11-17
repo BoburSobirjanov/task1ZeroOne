@@ -68,6 +68,11 @@ interface CategoryRepository:BaseRepository<Category> {
     @Query("select u from category as u where u.deleted=false")
     fun findAllCategory(pageable: Pageable):Page<Category>
 
+    @Query("select u from category as u order by case when :sortState='asc' " +
+            "then u.orders end asc, case when :sortState='desc' " +
+            "then u.orders end desc")
+    fun findAllSortedCategories(sortState:String,pageable: Pageable):Page<Category>
+
 }
 
 

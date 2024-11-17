@@ -85,6 +85,7 @@ interface CategoryService{
     fun update(id: Long, request: CategoryCreateRequest)
     fun delete(id: Long)
     fun getAll(pageable: Pageable):Page<CategoryResponse>
+    fun getSortedAll(sortState:String,pageable: Pageable):Page<CategoryResponse>
 }
 
 
@@ -133,6 +134,12 @@ class CategoryServiceImpl(
 
     override fun getAll(pageable: Pageable): Page<CategoryResponse> {
         return categoryRepository.findAllCategory(pageable).map {
+            CategoryResponse.toResponse(it)
+        }
+    }
+
+    override fun getSortedAll(sortState: String,pageable: Pageable): Page<CategoryResponse> {
+        return categoryRepository.findAllSortedCategories(sortState,pageable).map {
             CategoryResponse.toResponse(it)
         }
     }
