@@ -14,6 +14,7 @@ interface UserService{
     fun getOne(id: Long): UserResponse
     fun update(id: Long, request: UserUpdateRequest)
     fun delete(id: Long)
+    fun getAll(pageable: Pageable):Page<UserResponse>
 }
 
 @Service
@@ -58,6 +59,12 @@ class UserServiceImpl(
         userRepository.save(user)
     }
 
+    override fun getAll(pageable: Pageable): Page<UserResponse> {
+        return userRepository.findAllUser(pageable).map {
+            UserResponse.toResponse(it)
+        }
+    }
+
 }
 
 
@@ -77,6 +84,7 @@ interface CategoryService{
     fun getOne(id: Long): CategoryResponse
     fun update(id: Long, request: CategoryCreateRequest)
     fun delete(id: Long)
+    fun getAll(pageable: Pageable):Page<CategoryResponse>
 }
 
 
@@ -123,6 +131,12 @@ class CategoryServiceImpl(
         categoryRepository.save(category)
     }
 
+    override fun getAll(pageable: Pageable): Page<CategoryResponse> {
+        return categoryRepository.findAllCategory(pageable).map {
+            CategoryResponse.toResponse(it)
+        }
+    }
+
 }
 
 
@@ -142,6 +156,7 @@ interface ProductService{
     fun getOne(id: Long): ProductResponse
     fun update(id: Long, request: ProductCreateRequest)
     fun delete(id: Long)
+    fun getAll(pageable: Pageable):Page<ProductResponse>
 }
 
 @Service
@@ -170,8 +185,8 @@ class ProductServiceImpl(
         product.run {
             name = request.name
             count = request.count
-            val category = categoryRepository.findCategoryById(request.categoryId)?: throw CategoryNotFoundExistsException()
-            categoryId = category
+            val categoryById = categoryRepository.findCategoryById(request.categoryId)?: throw CategoryNotFoundExistsException()
+            category = categoryById
         }
         productRepository.save(product)
     }
@@ -184,6 +199,11 @@ class ProductServiceImpl(
         productRepository.save(product)
     }
 
+    override fun getAll(pageable: Pageable): Page<ProductResponse> {
+        return productRepository.findAllProduct(pageable).map {
+            ProductResponse.toResponse(it)
+        }
+    }
 }
 
 
@@ -193,33 +213,59 @@ class ProductServiceImpl(
 interface TransactionService{
     fun create(request: TransactionCreateRequest)
     fun getOne(id: Long): TransactionResponse
-    fun update(id: Long, request: TransactionCreateRequest)
     fun delete(id: Long)
+    fun getAll(pageable: Pageable):Page<TransactionResponse>
+    fun getAllTransactionByUserId(id: Long, pageable: Pageable):Page<TransactionResponse>
 }
 @Service
 class TransactionServiceImpl(
         private val transactionRepository: TransactionRepository,
         private val userRepository: UserRepository,
-        private val entityManager: EntityManager
+        private val entityManager: EntityManager,
+        private val transactionItemService: TransactionItemService
 ):TransactionService{
     override fun create(request: TransactionCreateRequest) {
         request.run {
             userRepository.findUserByIdAndDeletedFalse(request.userId) ?: throw UserNotFoundExistsException()
             val user = entityManager.getReference(User::class.java,userId)
-            transactionRepository.save(this.toEntity(user))
+            val transaction = transactionRepository.save(this.toEntity(user))
+            for (item in request.transactionItems){
+                val itemWithTransactionId = TransactionItemCreateRequest(
+                        productId = item.productId,
+                        count = item.count,
+                        amount = item.amount,
+                        transactionId = transaction.id!!
+                )
+                transactionItemService.create(itemWithTransactionId)
+            }
         }
     }
 
     override fun getOne(id: Long): TransactionResponse {
-        TODO("Not yet implemented")
-    }
-
-    override fun update(id: Long, request: TransactionCreateRequest) {
-        TODO("Not yet implemented")
+        return transactionRepository.findTransactionById(id)?.let {
+            TransactionResponse.toResponse(it)
+        }?:throw TransactionNotFoundException()
     }
 
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val transaction = transactionRepository.findTransactionById(id)?:throw TransactionNotFoundException()
+        transaction.run {
+            deleted=true
+        }
+        transactionRepository.save(transaction)
+    }
+
+    override fun getAll(pageable: Pageable): Page<TransactionResponse> {
+        return transactionRepository.findAllTransaction(pageable).map {
+            TransactionResponse.toResponse(it)
+        }
+    }
+
+    override fun getAllTransactionByUserId(id: Long, pageable: Pageable): Page<TransactionResponse> {
+        val user =  userRepository.findUserByIdAndDeletedFalse(id)?:throw UserNotFoundExistsException()
+        return transactionRepository.findAllTransactionByUserId(user, pageable).map {
+            TransactionResponse.toResponse(it)
+        }
     }
 
 }
@@ -236,6 +282,7 @@ interface UserPaymentTransactionService{
     fun getOne(id: Long): UserPaymentTransactionResponse
     fun delete(id: Long)
     fun getUsersPaymentTransactionHistory(id: Long,pageable: Pageable): Page<UserPaymentTransactionResponse>
+    fun getAll(pageable: Pageable):Page<UserPaymentTransactionResponse>
 }
 
 @Service
@@ -276,6 +323,12 @@ class UserPaymentTransactionServiceImpl(
         }
     }
 
+    override fun getAll(pageable: Pageable): Page<UserPaymentTransactionResponse> {
+        return userPaymentTransactionRepository.findAllUserPaymentTransaction(pageable).map {
+            UserPaymentTransactionResponse.toResponse(it)
+        }
+    }
+
 }
 
 
@@ -290,8 +343,11 @@ class UserPaymentTransactionServiceImpl(
 interface TransactionItemService{
     fun create(request: TransactionItemCreateRequest)
     fun getOne(id: Long): TransactionItemResponse
-    fun update(id: Long, request: TransactionCreateRequest)
+    fun update(id: Long, request: TransactionItemCreateRequest)
     fun delete(id: Long)
+    fun getAll(pageable: Pageable):Page<TransactionItemResponse>
+    fun getAllTransactionItemByTransactionId(id: Long, pageable: Pageable):Page<TransactionItemResponse>
+    fun getUsersTransactionItemsHistory(id: Long,pageable: Pageable):Page<Map<String, Any>>
 }
 
 @Service
@@ -308,7 +364,7 @@ class TransactionItemServiceImpl(
             productRepository.findProductById(request.productId)?:throw ProductNotFoundException()
             val transaction = entityManager.getReference(Transaction::class.java,transactionId)
             val product = entityManager.getReference(Product::class.java,productId)
-            val user = transaction.userId.id?.let { userRepository.findUserByIdAndDeletedFalse(it) }
+            val user = transaction.user.id?.let { userRepository.findUserByIdAndDeletedFalse(it) }
             if (user != null) {
                 if (user.balance<request.amount.multiply(BigDecimal(request.count)))throw UserHasNotEnoughBalance()
             }
@@ -317,21 +373,50 @@ class TransactionItemServiceImpl(
             if (product.count<request.count)throw ProductHasNotEnoughException()
             transaction.totalAmount+=request.amount.multiply(BigDecimal(request.count))
             transactionItemsRepository.save(this.toEntity(transaction,product))
-            transactionRepository.save(transaction)
-
         }
     }
 
     override fun getOne(id: Long): TransactionItemResponse {
-        TODO("Not yet implemented")
+        return transactionItemsRepository.findTransactionItemById(id)?.let {
+            TransactionItemResponse.toResponse(it)
+        }?:throw TransactionItemNotFoundException()
     }
 
-    override fun update(id: Long, request: TransactionCreateRequest) {
-        TODO("Not yet implemented")
+    override fun update(id: Long, request: TransactionItemCreateRequest) {
+        val transactionItem = transactionItemsRepository.findTransactionItemById(id)?:throw TransactionItemNotFoundException()
+        transactionItem.run {
+            product.let { request.productId}
+            count.let { request.count }
+            amount.let { request.amount }
+            val transactionById = transactionRepository.findTransactionById(request.transactionId)?:throw TransactionNotFoundException()
+            transaction =transactionById
+        }
+        transactionItemsRepository.save(transactionItem)
     }
 
     override fun delete(id: Long) {
-        TODO("Not yet implemented")
+        val transactionItem = transactionItemsRepository.findTransactionItemById(id)?:throw TransactionItemNotFoundException()
+        transactionItem.run {
+            deleted=true
+        }
+        transactionItemsRepository.save(transactionItem)
+    }
+
+    override fun getAll(pageable: Pageable): Page<TransactionItemResponse> {
+        return transactionItemsRepository.findAllTransactionItems(pageable).map {
+            TransactionItemResponse.toResponse(it)
+        }
+    }
+
+    override fun getAllTransactionItemByTransactionId(id: Long, pageable: Pageable): Page<TransactionItemResponse> {
+        val transaction = transactionRepository.findTransactionById(id) ?: throw TransactionNotFoundException()
+        return transactionItemsRepository.findAllTransactionItemByTransaction(transaction,pageable).map {
+            TransactionItemResponse.toResponse(it)
+        }
+    }
+
+    override fun getUsersTransactionItemsHistory(id: Long,pageable: Pageable): Page<Map<String, Any>> {
+       return transactionItemsRepository.findUsersProductHistory(id, pageable)
     }
 
 }

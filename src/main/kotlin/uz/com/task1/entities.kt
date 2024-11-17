@@ -5,7 +5,6 @@ import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.math.BigDecimal
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 
@@ -48,7 +47,7 @@ class Category(
 
 @Entity(name = "transactions")
 class Transaction(
-       @ManyToOne var userId: User,
+       @ManyToOne var user: User,
        var totalAmount: BigDecimal
 ):BaseEntity()
 
@@ -61,7 +60,7 @@ class Transaction(
 class Product(
         var name: String,
         var count: Long,
-        @ManyToOne var categoryId: Category
+        @ManyToOne var category: Category
 ):BaseEntity()
 
 
@@ -71,11 +70,11 @@ class Product(
 
 @Entity(name = "transaction_items")
 class TransactionItem(
-       @ManyToOne  var productId: Product,
+       @ManyToOne  var product: Product,
         var count: Long,
         var amount: BigDecimal,
         var totalAmount: BigDecimal,
-       @ManyToOne  var transactionId: Transaction
+       @ManyToOne  var transaction: Transaction
 ):BaseEntity()
 
 
@@ -85,7 +84,7 @@ class TransactionItem(
 
 @Entity(name = "user_payment_transaction")
 class UserPaymentTransaction(
-        @ManyToOne var userId: User,
+        @ManyToOne var user: User,
         var amount: BigDecimal
 ):BaseEntity()
 
