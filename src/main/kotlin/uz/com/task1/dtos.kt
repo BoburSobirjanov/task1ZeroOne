@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Size
 import java.math.BigDecimal
 
 
-data class BaseMessage(val code: Int, val message: String?)
-
-
 
 
 data class UserCreateRequest(
@@ -72,7 +69,7 @@ data class ProductResponse(
     companion object {
         fun toResponse(product: Product): ProductResponse{
             product.run {
-                return ProductResponse(id!!,name,count,categoryId.name)
+                return ProductResponse(product.id!!,product.name,product.count,product.category.name)
             }
         }
     }
@@ -125,12 +122,33 @@ data class CategoryResponse(
 
 data class TransactionCreateRequest(
         var userId: Long,
-        var totalAmount: BigDecimal= BigDecimal.ZERO
+        var transactionItems: List<TransactionItemCreateRequestList>
 ){
+    private fun calculateTotalAmount(): BigDecimal {
+        return transactionItems.fold(BigDecimal.ZERO) { total, item ->
+            total + item.amount.multiply(BigDecimal(item.count))
+        }
+    }
     fun toEntity(user: User):Transaction{
-        return Transaction(user,totalAmount)
+        return Transaction(user,calculateTotalAmount())
     }
 }
+
+
+
+data class TransactionItemCreateRequestList(
+        var productId:Long,
+        @field:Min(1) @field:Positive var count: Long,
+        var amount: BigDecimal
+){
+    fun toEntity(transaction: Transaction, product: Product):TransactionItem{
+        val totalAmount = amount.multiply(BigDecimal(count))
+        return TransactionItem(product,count,amount,totalAmount,transaction)
+    }
+}
+
+
+
 
 data class TransactionResponse(
         var id: Long,
@@ -140,7 +158,7 @@ data class TransactionResponse(
     companion object{
         fun toResponse(transaction: Transaction):TransactionResponse{
             transaction.run {
-                return TransactionResponse(id!!, userId.username,totalAmount)
+                return TransactionResponse(id!!, user.username,totalAmount)
             }
         }
     }
@@ -172,7 +190,7 @@ data class UserPaymentTransactionResponse(
     companion object{
         fun toResponse(userPaymentTransaction: UserPaymentTransaction):UserPaymentTransactionResponse{
             userPaymentTransaction.run {
-                return UserPaymentTransactionResponse(id!!,userId.username,amount)
+                return UserPaymentTransactionResponse(id!!,user.username,amount)
             }
         }
     }
@@ -197,6 +215,11 @@ data class TransactionItemCreateRequest(
     }
 }
 
+
+
+
+
+
 data class TransactionItemResponse(
         var id: Long,
         var count: Long,
@@ -206,7 +229,7 @@ data class TransactionItemResponse(
     companion object{
         fun toResponse(transactionItem: TransactionItem):TransactionItemResponse{
             transactionItem.run {
-                return TransactionItemResponse(id!!,count,amount, transactionId.id!!)
+                return TransactionItemResponse(id!!,count,amount, transaction.id!!)
             }
         }
     }

@@ -1,11 +1,8 @@
 package uz.com.task1
 
 import jakarta.validation.Valid
-import org.springframework.context.support.ResourceBundleMessageSource
 import org.springframework.data.domain.Pageable
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.bind.annotation.ExceptionHandler
 
 
 @RestController
@@ -27,6 +24,10 @@ class UserController( val userService: UserService){
 
     @DeleteMapping("{id}")
     fun delete(@PathVariable id: Long) = userService.delete(id)
+
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=userService.getAll(pageable)
 
 }
 
@@ -57,6 +58,9 @@ class CategoryController(val categoryService: CategoryService
 
     @DeleteMapping("{id}")
     fun delete(@PathVariable id: Long)= categoryService.delete(id)
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=categoryService.getAll(pageable)
 }
 
 
@@ -83,6 +87,10 @@ class ProductController(val productService: ProductService){
 
     @DeleteMapping("{id}")
     fun delete(@PathVariable id: Long)=productService.delete(id)
+
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=productService.getAll(pageable)
 }
 
 
@@ -101,6 +109,14 @@ class UserPaymentTransactionController(val userPaymentTransactionService: UserPa
     @GetMapping("get-users-payments-history")
     fun getUsersAllPaymentTransaction(@RequestParam id: Long, pageable: Pageable)=userPaymentTransactionService.getUsersPaymentTransactionHistory(id, pageable)
 
+    @GetMapping("{id}")
+    fun getOne(@PathVariable id: Long)=userPaymentTransactionService.getOne(id)
+
+    @DeleteMapping("{id}")
+    fun delete(@PathVariable id: Long)=userPaymentTransactionService.delete(id)
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=userPaymentTransactionService.getAll(pageable)
 }
 
 
@@ -112,6 +128,19 @@ class TransactionController(val transactionService: TransactionService ){
 
     @PostMapping("create")
     fun create(@RequestBody request: TransactionCreateRequest)=transactionService.create(request)
+
+    @GetMapping("{id}")
+    fun getOne(@PathVariable id: Long)=transactionService.getOne(id)
+
+    @DeleteMapping("{id}")
+    fun delete(@PathVariable id: Long)=transactionService.delete(id)
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=transactionService.getAll(pageable)
+
+    @GetMapping("get-user-id/{id}")
+    fun getTransactionByUserId(@PathVariable id: Long, pageable: Pageable)=
+            transactionService.getAllTransactionByUserId(id, pageable)
 }
 
 
@@ -124,4 +153,21 @@ class TransactionItemController(val transactionItemService: TransactionItemServi
 
     @PostMapping("create")
     fun create(@RequestBody request: TransactionItemCreateRequest)=transactionItemService.create(request)
+
+    @GetMapping("{id}")
+    fun getOne(@PathVariable id: Long)=transactionItemService.getOne(id)
+
+    @DeleteMapping("{id}")
+    fun delete(@PathVariable id: Long)=transactionItemService.delete(id)
+
+    @PutMapping("{id}")
+    fun update(@PathVariable id: Long, @RequestBody request: TransactionItemCreateRequest)=
+            transactionItemService.update(id, request)
+
+    @GetMapping("get-all")
+    fun getAll(pageable: Pageable)=transactionItemService.getAll(pageable)
+
+    @GetMapping
+    fun usersTransactionItemsHistory(@RequestParam id: Long, pageable: Pageable)=
+            transactionItemService.getUsersTransactionItemsHistory(id, pageable)
 }
