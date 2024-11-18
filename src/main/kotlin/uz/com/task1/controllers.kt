@@ -66,8 +66,8 @@ class CategoryController(val categoryService: CategoryService
         return if (sortState.isNullOrBlank()) {
             categoryService.getAll(pageable)
         } else {
-            if (sortState.toLowerCase() != "asc" && sortState.toLowerCase() != "desc") {
-                throw IllegalArgumentException("sortState must be 'asc' or 'desc'")
+            if (sortState.lowercase(Locale.getDefault()) != "asc" && sortState.lowercase(Locale.getDefault()) != "desc") {
+                throw IllegalArgumentException("sortState must be 'asc' or 'desc' format")
             }
             categoryService.getSortedAll(sortState,pageable)
         }

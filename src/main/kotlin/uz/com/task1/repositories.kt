@@ -10,9 +10,7 @@ import org.springframework.stereotype.Repository
 
 
 @NoRepositoryBean
-interface BaseRepository<T:BaseEntity>: JpaRepository<T,Long>, JpaSpecificationExecutor<T> {
-
-}
+interface BaseRepository<T:BaseEntity>: JpaRepository<T,Long>, JpaSpecificationExecutor<T>
 
 
 @Repository
