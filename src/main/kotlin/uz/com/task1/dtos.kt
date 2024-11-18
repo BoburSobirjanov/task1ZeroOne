@@ -140,12 +140,7 @@ data class TransactionItemCreateRequestList(
         var productId:Long,
         @field:Min(1) @field:Positive var count: Long,
         var amount: BigDecimal
-){
-    fun toEntity(transaction: Transaction, product: Product):TransactionItem{
-        val totalAmount = amount.multiply(BigDecimal(count))
-        return TransactionItem(product,count,amount,totalAmount,transaction)
-    }
-}
+)
 
 
 
